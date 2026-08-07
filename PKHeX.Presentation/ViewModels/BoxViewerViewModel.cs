@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PKHeX.Application.Abstractions;
 using PKHeX.Presentation.Models;
 using PKHeX.Core;
 using PKHeX.Presentation.Localization;
@@ -17,6 +18,7 @@ public partial class BoxViewerViewModel : ViewModelBase, IBoxNavigator
     private readonly IWindowService? _windowService;
     private readonly IDialogService? _dialogService;
     private readonly bool _haxMode;
+    private readonly IGen4ChineseCharTableService? _gen4ChineseCharTableService;
 
     private const int Columns = 6;
 
@@ -56,7 +58,7 @@ public partial class BoxViewerViewModel : ViewModelBase, IBoxNavigator
         SelectedIndex = slot;
     }
 
-    public BoxViewerViewModel(SaveFile sav, ISpriteRenderer spriteRenderer, ISlotService? slotService = null, IWindowService? windowService = null, IDialogService? dialogService = null, bool haxMode = false)
+    public BoxViewerViewModel(SaveFile sav, ISpriteRenderer spriteRenderer, ISlotService? slotService = null, IWindowService? windowService = null, IDialogService? dialogService = null, bool haxMode = false, IGen4ChineseCharTableService? gen4ChineseCharTableService = null)
     {
         _sav = sav;
         _spriteRenderer = spriteRenderer;
@@ -64,6 +66,7 @@ public partial class BoxViewerViewModel : ViewModelBase, IBoxNavigator
         _windowService = windowService;
         _dialogService = dialogService;
         _haxMode = haxMode;
+        _gen4ChineseCharTableService = gen4ChineseCharTableService;
         Seek = new EntitySeekViewModel(sav, this);
 
         LoadBox(0);
@@ -110,7 +113,7 @@ public partial class BoxViewerViewModel : ViewModelBase, IBoxNavigator
                 Sprite = _spriteRenderer.GetSprite(pk),
                 IsEmpty = isEmpty,
                 IsShiny = pk.IsShiny,
-                Nickname = isEmpty ? string.Empty : pk.Nickname,
+                Nickname = isEmpty ? string.Empty : DisplayNickname(pk),
                 SpeciesName = isEmpty ? string.Empty : StringResourceLookup.Species(pk.Species),
                 Level = pk.CurrentLevel,
                 Gender = (byte)pk.Gender,
@@ -133,6 +136,11 @@ public partial class BoxViewerViewModel : ViewModelBase, IBoxNavigator
         // Restore selection position (clamped to valid range)
         SelectedIndex = Math.Clamp(previousIndex, 0, Math.Max(0, Slots.Count - 1));
     }
+
+    private string DisplayNickname(PKM pk) =>
+        _gen4ChineseCharTableService?.IsSupported(pk) == true
+            ? _gen4ChineseCharTableService.DecodeNickname(pk)
+            : pk.Nickname;
 
     [RelayCommand]
     private void PreviousBox()

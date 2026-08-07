@@ -206,7 +206,8 @@ public class MainWindowUpdateCheckTests
             new Mock<IAutoLegalityService>().Object,
             new Mock<PKHeX.Application.Abstractions.LiveHex.ILiveHexService>().Object,
             new Mock<ILivingDexService>().Object,
-            new Mock<PKHeX.Application.Abstractions.GiftRecords.IGiftRecordProvider>().Object);
+            new Mock<PKHeX.Application.Abstractions.GiftRecords.IGiftRecordProvider>().Object,
+            new Mock<IGen4ChineseCharTableService>().Object);
         return (vm, coordinator);
     }
 

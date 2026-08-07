@@ -32,7 +32,8 @@ public sealed class PKHaXModeTests
             new Mock<IAutoLegalityService>().Object,
             new Mock<ILiveHexService>().Object,
             new Mock<ILivingDexService>().Object,
-            new Mock<IGiftRecordProvider>().Object);
+            new Mock<IGiftRecordProvider>().Object,
+            new Mock<IGen4ChineseCharTableService>().Object);
 
         var save = new SAV6XY();
         saveGateway.Raise(m => m.SaveFileChanged += null, save);

@@ -92,6 +92,9 @@ public partial class SettingsViewModel : ViewModelBase, ICloseableDialog
     [ObservableProperty] private AppTheme _selectedTheme;
     public IReadOnlyList<AppTheme> Themes { get; } = Enum.GetValues<AppTheme>();
 
+    // Text encoding
+    [ObservableProperty] private bool _gen4ChineseCharTableEnabled;
+
     partial void OnSelectedThemeChanged(AppTheme value)
     {
         // Apply (and persist) immediately so the picker previews live, without needing Save.
@@ -121,6 +124,8 @@ public partial class SettingsViewModel : ViewModelBase, ICloseableDialog
         SpritePreference = _settings.Sprite.SpritePreference;
         SelectedTheme = _themeService.CurrentTheme;
 
+        Gen4ChineseCharTableEnabled = _settings.Gen4ChineseCharTable.Enabled;
+
         _isLoading = false;
     }
 
@@ -142,6 +147,8 @@ public partial class SettingsViewModel : ViewModelBase, ICloseableDialog
         _settings.SlotWrite.ModifyUnset = ModifyUnset;
 
         _settings.Sprite.SpritePreference = SpritePreference;
+
+        _settings.Gen4ChineseCharTable.Enabled = Gen4ChineseCharTableEnabled;
 
         _settingsStore.Save(_settings);
         _settings.InitializeCore();

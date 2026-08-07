@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PKHeX.Application.Abstractions;
 using PKHeX.Presentation.Models;
 using PKHeX.Core;
 
@@ -14,6 +15,7 @@ public partial class GroupViewerViewModel : ViewModelBase
     private readonly ISpriteRenderer _spriteRenderer;
     private readonly IReadOnlyList<SlotGroup> _groups;
     private readonly ISlotService? _slotService;
+    private readonly IGen4ChineseCharTableService? _gen4ChineseCharTableService;
 
     [ObservableProperty]
     private int _currentGroupIndex;
@@ -30,12 +32,13 @@ public partial class GroupViewerViewModel : ViewModelBase
     [ObservableProperty]
     private SlotData? _selectedSlot;
 
-    public GroupViewerViewModel(SaveFile sav, IReadOnlyList<SlotGroup> groups, ISpriteRenderer spriteRenderer, ISlotService? slotService = null)
+    public GroupViewerViewModel(SaveFile sav, IReadOnlyList<SlotGroup> groups, ISpriteRenderer spriteRenderer, ISlotService? slotService = null, IGen4ChineseCharTableService? gen4ChineseCharTableService = null)
     {
         _sav = sav;
         _groups = groups;
         _spriteRenderer = spriteRenderer;
         _slotService = slotService;
+        _gen4ChineseCharTableService = gen4ChineseCharTableService;
 
         GroupNames = new ObservableCollection<string>(groups.Select(g => g.GroupName));
         
@@ -84,7 +87,7 @@ public partial class GroupViewerViewModel : ViewModelBase
                 Sprite = _spriteRenderer.GetSprite(pk),
                 IsEmpty = isEmpty,
                 IsShiny = pk.IsShiny,
-                Nickname = isEmpty ? string.Empty : pk.Nickname,
+                Nickname = isEmpty ? string.Empty : DisplayNickname(pk),
                 SpeciesName = isEmpty ? string.Empty : StringResourceLookup.Species(pk.Species),
                 Level = pk.CurrentLevel,
                 Gender = (byte)pk.Gender,
@@ -100,6 +103,11 @@ public partial class GroupViewerViewModel : ViewModelBase
             });
         }
     }
+
+    private string DisplayNickname(PKM pk) =>
+        _gen4ChineseCharTableService?.IsSupported(pk) == true
+            ? _gen4ChineseCharTableService.DecodeNickname(pk)
+            : pk.Nickname;
 
     [RelayCommand]
     private void NextGroup()

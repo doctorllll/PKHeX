@@ -3,6 +3,7 @@ using System.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using PKHeX.Application.Abstractions;
 using PKHeX.Application.Abstractions.GiftRecords;
 using PKHeX.Application.Abstractions.LiveHex;
 using PKHeX.Core;
@@ -29,7 +30,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ILiveHexService _liveHexService;
     private readonly ILivingDexService _livingDexService;
     private readonly IGiftRecordProvider _giftRecordProvider;
+    private readonly IGen4ChineseCharTableService _gen4ChineseCharTableService;
     private readonly UpdateCheckCoordinator _updateCoordinator;
+
+    /// <summary>The Gen4 Chinese fan-translation character table service, gated by the opt-in setting.</summary>
+    private IGen4ChineseCharTableService? Gen4ChineseCharTableIfEnabled =>
+        _settings.Gen4ChineseCharTable.Enabled ? _gen4ChineseCharTableService : null;
 
     // Captured on the UI thread at construction so update-check continuations (which may complete on
     // a thread-pool thread) marshal their status-bar mutation back onto the UI thread.
@@ -100,7 +106,8 @@ public partial class MainWindowViewModel : ViewModelBase
         IAutoLegalityService autoLegalityService,
         ILiveHexService liveHexService,
         ILivingDexService livingDexService,
-        IGiftRecordProvider giftRecordProvider)
+        IGiftRecordProvider giftRecordProvider,
+        IGen4ChineseCharTableService gen4ChineseCharTableService)
     {
         _saveFileService = saveFileService;
         _dialogService = dialogService;
@@ -120,6 +127,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _liveHexService = liveHexService;
         _livingDexService = livingDexService;
         _giftRecordProvider = giftRecordProvider;
+        _gen4ChineseCharTableService = gen4ChineseCharTableService;
 
         // Mirror the coordinator's status-bar notification (raised by either the startup check or a
         // manual "Check for Updates" from the Settings/About dialogs) into the bound property.
@@ -194,11 +202,11 @@ public partial class MainWindowViewModel : ViewModelBase
                 _undoRedo.Initialize(sav);
                 GameInfo.FilteredSources = new FilteredGameDataSource(sav, GameInfo.Sources, IsHaXMode);
 
-                var pokemonEditor = new PokemonEditorViewModel(sav.BlankPKM, sav, _spriteRenderer, _dialogService, _windowService, IsHaXMode);
+                var pokemonEditor = new PokemonEditorViewModel(sav.BlankPKM, sav, _spriteRenderer, _dialogService, _windowService, IsHaXMode, Gen4ChineseCharTableIfEnabled);
                 pokemonEditor.SaveFileDropRequested += OnSaveFileDropRequested;
                 CurrentPokemonEditor = pokemonEditor;
 
-                var boxViewer = new BoxViewerViewModel(sav, _spriteRenderer, _slotService, _windowService, _dialogService, IsHaXMode);
+                var boxViewer = new BoxViewerViewModel(sav, _spriteRenderer, _slotService, _windowService, _dialogService, IsHaXMode, Gen4ChineseCharTableIfEnabled);
                 boxViewer.SlotActivated += OnBoxSlotActivated;
                 boxViewer.ViewSlotRequested += OnBoxViewSlot;
                 boxViewer.SetSlotRequested += OnBoxSetSlot;
@@ -206,7 +214,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 boxViewer.SaveFileDropRequested += OnSaveFileDropRequested;
                 BoxViewer = boxViewer;
 
-                var partyViewer = new PartyViewerViewModel(sav, _spriteRenderer, _slotService, _dialogService, IsHaXMode);
+                var partyViewer = new PartyViewerViewModel(sav, _spriteRenderer, _slotService, _dialogService, IsHaXMode, Gen4ChineseCharTableIfEnabled);
                 partyViewer.SlotActivated += OnPartySlotActivated;
                 partyViewer.ViewSlotRequested += OnPartyViewSlot;
                 partyViewer.SetSlotRequested += OnPartySetSlot;

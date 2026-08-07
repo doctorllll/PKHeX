@@ -3,6 +3,7 @@ using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PKHeX.Application.Abstractions;
 using PKHeX.Core;
 using PKHeX.Presentation.Localization;
 
@@ -16,7 +17,11 @@ public partial class PokemonEditorViewModel : ViewModelBase
     private readonly IDialogService _dialogService;
     private readonly IWindowService _windowService;
     private readonly bool _haxMode;
+    private readonly IGen4ChineseCharTableService? _gen4ChineseCharTableService;
     private bool _isLoading; // Flag to prevent modifying _pk during load
+
+    /// <summary>True when the opt-in Gen4 Chinese fan-translation character table applies to <see cref="_pk"/>.</summary>
+    private bool UseGen4ChineseCharTable => _gen4ChineseCharTableService?.IsSupported(_pk) == true;
 
     // Data sources (mostly filtered by SaveFile context)
     [ObservableProperty] private IReadOnlyList<ComboItem> _speciesList;
@@ -131,7 +136,7 @@ public partial class PokemonEditorViewModel : ViewModelBase
     public int FormEntryMax => byte.MaxValue;
     public PKM TargetPKM => _pk;
 
-    public PokemonEditorViewModel(PKM pk, SaveFile sav, ISpriteRenderer spriteRenderer, IDialogService dialogService, IWindowService windowService, bool haxMode = false)
+    public PokemonEditorViewModel(PKM pk, SaveFile sav, ISpriteRenderer spriteRenderer, IDialogService dialogService, IWindowService windowService, bool haxMode = false, IGen4ChineseCharTableService? gen4ChineseCharTableService = null)
     {
         _pk = pk.Clone(); // Always work on a copy
         _sav = sav;
@@ -139,6 +144,7 @@ public partial class PokemonEditorViewModel : ViewModelBase
         _dialogService = dialogService;
         _windowService = windowService;
         _haxMode = haxMode;
+        _gen4ChineseCharTableService = gen4ChineseCharTableService;
 
         var filtered = GameInfo.FilteredSources;
         SpeciesList = filtered.Species;
@@ -216,7 +222,7 @@ public partial class PokemonEditorViewModel : ViewModelBase
             UpdateAbilityList(false);
 
             Ability = _pk.Ability;
-            Nickname = _pk.Nickname;
+            Nickname = UseGen4ChineseCharTable ? _gen4ChineseCharTableService!.DecodeNickname(_pk) : _pk.Nickname;
             IsNicknamed = _pk.IsNicknamed;
             Level = _pk.CurrentLevel;
             Nature = (int)_pk.Nature;
@@ -290,7 +296,7 @@ public partial class PokemonEditorViewModel : ViewModelBase
             EggLocation = _pk.EggLocation;
             MetLevel = _pk.MetLevel;
 
-            OriginalTrainerName = _pk.OriginalTrainerName;
+            OriginalTrainerName = UseGen4ChineseCharTable ? _gen4ChineseCharTableService!.DecodeOriginalTrainerName(_pk) : _pk.OriginalTrainerName;
             TrainerID = _pk.DisplayTID;
             OriginalTrainerGender = _pk.OriginalTrainerGender;
 
@@ -548,8 +554,15 @@ public partial class PokemonEditorViewModel : ViewModelBase
         _pk.Form = (byte)Form;
         // Only re-encode if actually edited: characters PKHeX can't decode (e.g. custom
         // fan-translation encodings) round-trip to '?' otherwise, corrupting untouched names.
-        if (_pk.Nickname != Nickname)
+        if (UseGen4ChineseCharTable)
+        {
+            if (_gen4ChineseCharTableService!.DecodeNickname(_pk) != Nickname)
+                _gen4ChineseCharTableService.SetNickname(_pk, Nickname);
+        }
+        else if (_pk.Nickname != Nickname)
+        {
             _pk.Nickname = Nickname;
+        }
         _pk.Stat_Level = (byte)Level;
         _pk.StatAlignment = (Nature)StatAlignment;
         _pk.Nature = (Nature)Nature;
@@ -599,8 +612,15 @@ public partial class PokemonEditorViewModel : ViewModelBase
         _pk.EV_SPD = EvSPD;
         _pk.EV_SPE = EvSPE;
 
-        if (_pk.OriginalTrainerName != OriginalTrainerName)
+        if (UseGen4ChineseCharTable)
+        {
+            if (_gen4ChineseCharTableService!.DecodeOriginalTrainerName(_pk) != OriginalTrainerName)
+                _gen4ChineseCharTableService.SetOriginalTrainerName(_pk, OriginalTrainerName);
+        }
+        else if (_pk.OriginalTrainerName != OriginalTrainerName)
+        {
             _pk.OriginalTrainerName = OriginalTrainerName;
+        }
         _pk.OriginalTrainerGender = (byte)OriginalTrainerGender;
         _pk.DisplayTID = (uint)TrainerID;
         _pk.DisplaySID = (uint)Sid;

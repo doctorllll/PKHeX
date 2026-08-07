@@ -106,7 +106,7 @@ public partial class MainWindowViewModel
             return;
         }
 
-        var vm = new GroupViewerViewModel(CurrentSave, groups, _spriteRenderer, _slotService);
+        var vm = new GroupViewerViewModel(CurrentSave, groups, _spriteRenderer, _slotService, Gen4ChineseCharTableIfEnabled);
         await _windowService.ShowDialogAsync(vm, T("Dialog_GroupViewer"));
     }
 
