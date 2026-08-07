@@ -8,4 +8,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
     <ProjectReference Include="..\PKHeX.Core\PKHeX.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Text\Gen4ChineseFanTranslation\CharTable.txt" />
+  </ItemGroup>
 </Project>

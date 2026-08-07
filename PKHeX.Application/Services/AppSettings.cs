@@ -27,6 +27,7 @@ public sealed class AppSettings : IProgramSettings
     public LocalResourceSettings LocalResources { get; set; } = new();
     public SpriteSettings Sprite { get; set; } = new();
     public ThemeSettings Theme { get; set; } = new();
+    public Gen4ChineseCharTableSettings Gen4ChineseCharTable { get; set; } = new();
 
     public string DisplayLanguage { get; set; } = "en";
 
@@ -99,5 +100,15 @@ public sealed class AppSettings : IProgramSettings
     public class SaveBackupSettings
     {
         public int MaxBackupsPerSave { get; set; } = 10;
+    }
+
+    /// <summary>
+    /// Opt-in alternate Generation 4 character table for saves from Chinese fan-translation ROM
+    /// patches (e.g. HGSS "官译") that repurpose otherwise-unused character codes for Chinese
+    /// glyphs. Defined locally since Core intentionally only implements the official tables.
+    /// </summary>
+    public class Gen4ChineseCharTableSettings
+    {
+        public bool Enabled { get; set; }
     }
 }

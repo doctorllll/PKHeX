@@ -35,7 +35,8 @@ public class SlotOperationsTests
             new Mock<IAutoLegalityService>().Object,
             new Mock<PKHeX.Application.Abstractions.LiveHex.ILiveHexService>().Object,
             new Mock<ILivingDexService>().Object,
-            new Mock<PKHeX.Application.Abstractions.GiftRecords.IGiftRecordProvider>().Object);
+            new Mock<PKHeX.Application.Abstractions.GiftRecords.IGiftRecordProvider>().Object,
+            new Mock<IGen4ChineseCharTableService>().Object);
     }
 
     private static void InvokeOnBoxSetSlot(MainWindowViewModel vm, int box, int slot)
