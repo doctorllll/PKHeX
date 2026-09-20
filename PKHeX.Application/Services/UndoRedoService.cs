@@ -105,7 +105,13 @@ public sealed class UndoRedoService
             return;
         }
 
-        _changelog?.AddNewChange(info);
+        if (_changelog is not null)
+        {
+            // Begin() snapshots the pre-write state; Commit() immediately, matching the old
+            // AddNewChange contract (caller mutates the slot after this method returns).
+            using var change = _changelog.Begin(info);
+            change.Commit();
+        }
         _undoStack.Push(SingleUnit.Instance);
         _redoStack.Clear();
         SetChangeCount(_changeCount + 1);
@@ -119,8 +125,8 @@ public sealed class UndoRedoService
         if (unit is SingleUnit)
         {
             if (_changelog is null || !_changelog.CanUndo) return;
-            var info = _changelog.Undo();
-            UndoPerformed?.Invoke(info);
+            foreach (var info in _changelog.Undo())
+                UndoPerformed?.Invoke(info);
         }
         else if (unit is GroupUnit group)
         {
@@ -143,8 +149,8 @@ public sealed class UndoRedoService
         if (unit is SingleUnit)
         {
             if (_changelog is null || !_changelog.CanRedo) return;
-            var info = _changelog.Redo();
-            RedoPerformed?.Invoke(info);
+            foreach (var info in _changelog.Redo())
+                RedoPerformed?.Invoke(info);
         }
         else if (unit is GroupUnit group)
         {

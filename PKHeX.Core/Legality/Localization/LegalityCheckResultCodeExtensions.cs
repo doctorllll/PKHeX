@@ -83,6 +83,7 @@ public static class LegalityCheckResultCodeExtensions
             EggLocationTrade => localization.EggLocationTrade,
             EggLocationTradeFail => localization.EggLocationTradeFail,
             EggMetLocationFail => localization.EggMetLocationFail,
+            EggMoveCombination => localization.EggMoveCombination,
             EggNature => localization.EggNature,
             EggPP => localization.EggPP,
             EggPPUp => localization.EggPPUp,
@@ -90,6 +91,7 @@ public static class LegalityCheckResultCodeExtensions
             EggShinyPokeStar => localization.EggShinyPokeStar,
             EggSpecies => localization.EggSpecies,
             EggUnhatched => localization.EggUnhatched,
+            EggBreedChain_0 => localization.EggBreedChain_0,
 
             // Encounter
             EncCondition => localization.EncCondition,
@@ -131,6 +133,7 @@ public static class LegalityCheckResultCodeExtensions
             EffortShouldBeZero => localization.EffortShouldBeZero,
             EffortEXPIncreased => localization.EffortEXPIncreased,
             EffortUntrainedCap_0 => localization.EffortUntrainedCap,
+            EffortUntrainedMoreEXP_0 => localization.EffortUntrainedMoreEXP_0,
 
             // Evolution
             EvoInvalid => localization.EvoInvalid,
