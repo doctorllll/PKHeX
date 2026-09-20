@@ -33,10 +33,12 @@ public static class RibbonRules
         // Not available in Gen5
         { HasVisitedGen6: true } => true,
         { HasVisitedGen7: true } => true,
+        // No Ribbons in LGP/E
         { HasVisitedSWSH: true } => true,
         { HasVisitedBDSP: true } => true,
         // Not available in PLA
         { HasVisitedGen9: true } => true,
+        // No Ribbons in ZA
         _ => false,
     };
 
@@ -45,10 +47,12 @@ public static class RibbonRules
     /// </summary>
     public static bool IsRibbonValidBestFriends(PKM pk, EvolutionHistory evos) => evos switch
     {
-        { HasVisitedSWSH: true } => true, // Max Friendship
-        { HasVisitedBDSP: true } => true, // Max Friendship
-        { HasVisitedGen9: true } => true, // Max Friendship
+        // Via max Friendship, can be lowered afterwards.
+        { HasVisitedSWSH: true } => true,
+        { HasVisitedBDSP: true } => true,
+        { HasVisitedGen9: true } => true,
 
+        // Via max Affection, cannot be lowered afterwards. Property is not retained when transfered to Gen8+.
         { HasVisitedGen6: true } when pk is not PK6 { IsUntraded: true, OriginalTrainerAffection: < 255 } => true,
         { HasVisitedGen7: true } when pk is not PK7 { IsUntraded: true, OriginalTrainerAffection: < 255 } => true,
         _ => false,
@@ -66,9 +70,6 @@ public static class RibbonRules
         // Gen5: Can't obtain
         if (pk.Format < 6)
             return false;
-
-        // Gen6/7: Increase level by 30 from original level
-        static bool IsWellTraveled30(PKM pk) => pk.CurrentLevel - pk.MetLevel >= 30;
         if ((evos.HasVisitedGen6 || evos.HasVisitedGen7) && IsWellTraveled30(pk))
             return true;
 
@@ -87,6 +88,10 @@ public static class RibbonRules
 
         // Otherwise: Can't obtain
         return false;
+
+        // Increase level by 30 from original level (met level).
+        // Pokémon with a met level above 70 are thus ineligible for receiving the ribbon via this method.
+        static bool IsWellTraveled30(PKM pk) => (pk.CurrentLevel - pk.MetLevel) >= 30;
     }
 
     public static bool IsRibbonValidMasterRank(PKM pk, IEncounterTemplate enc, EvolutionHistory evos)
@@ -192,6 +197,9 @@ public static class RibbonRules
     {
         if (!evos.HasVisitedGen3)
             return false;
+        if (ParseSettings.Settings.Game.Gen3.AllowBattleTowerTeamSwap)
+            return true;
+
         if (!IsAllowedBattleFrontier(evos.Gen3[0].Species))
             return false;
 
@@ -212,7 +220,7 @@ public static class RibbonRules
     public static bool IsRibbonValidVictory(EvolutionHistory evos)
     {
         if (evos.HasVisitedGen3)
-            return IsAllowedBattleFrontier(evos.Gen3[0].Species);
+            return IsAllowedBattleFrontier(evos.Gen3[0].Species) || ParseSettings.Settings.Game.Gen3.AllowBattleTowerTeamSwap;
         return false;
     }
 
@@ -289,7 +297,9 @@ public static class RibbonRules
         {
             var head = evos.Gen3[0]; // Checking contest with Gen3 head is fine; all false cases cannot evolve (evolution chain is same Gen3/Gen4).
             var contest = IsAllowedContest4(head.Species, head.Form) ? MaxContestBoth : MaxContest3;
-            var battle = IsAllowedBattleFrontier(head.Species) ? IsRibbonValidWinning(pk, enc, evos) ? MaxBattleBoth : MaxBattleBothNoWinning : (byte)0;
+            var battle = !IsAllowedBattleFrontier(head.Species)
+                ? ParseSettings.Settings.Game.Gen3.AllowBattleTowerTeamSwap ? MaxBattle3 : (byte)0
+                : IsRibbonValidWinning(pk, enc, evos) ? MaxBattleBoth : MaxBattleBothNoWinning;
             return (contest, battle);
         }
         if (evos.HasVisitedGen4)
